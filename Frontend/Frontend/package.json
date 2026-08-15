@@ -1,0 +1,7 @@
+{
+  "name": "frontend-forwarder",
+  "private": true,
+  "scripts": {
+    "build": "cd .. && npm run build"
+  }
+}

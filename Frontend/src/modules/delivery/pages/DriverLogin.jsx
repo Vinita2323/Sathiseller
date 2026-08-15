@@ -1,0 +1,268 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const DriverLogin = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState('phone'); // 'phone' | 'otp'
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [statusState, setStatusState] = useState('idle'); // 'idle' | 'processing' | 'success'
+  const [otpStatus, setOtpStatus] = useState('idle'); // 'idle' | 'processing' | 'success'
+  const [hasError, setHasError] = useState(false);
+
+  const handleInputChange = (e) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    setMobileNumber(rawVal);
+    if (hasError && rawVal.length >= 10) {
+      setHasError(false);
+    }
+  };
+
+  const handlePhoneSubmit = (e) => {
+    e.preventDefault();
+    if (mobileNumber.length < 10) {
+      setHasError(true);
+      setTimeout(() => setHasError(false), 1200);
+      return;
+    }
+
+    setStatusState('processing');
+    setTimeout(() => {
+      setStatusState('success');
+      setTimeout(() => {
+        setStep('otp');
+        setStatusState('idle'); // reset for future
+      }, 1000);
+    }, 1500);
+  };
+
+  const handleOtpChange = (index, value) => {
+    const rawVal = value.replace(/\D/g, '');
+    if (!rawVal && value !== '') return;
+
+    let newOtp = otp.split('');
+    newOtp[index] = rawVal ? rawVal[rawVal.length - 1] : '';
+    setOtp(newOtp.join(''));
+
+    if (rawVal && index < 3) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      if (prevInput) prevInput.focus();
+    }
+  };
+
+  const handleOtpSubmit = (e) => {
+    e.preventDefault();
+    if (otp.length < 4) return;
+
+    setOtpStatus('processing');
+    setTimeout(() => {
+      setOtpStatus('success');
+      setTimeout(() => {
+        navigate('/driver/dashboard');
+      }, 1000);
+    }, 1500);
+  };
+
+  return (
+    <main className="min-h-screen flex items-center justify-center p-4 md:p-8 relative overflow-hidden bg-slate-50">
+      {/* Background Atmospheric Element */}
+      <div
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(#15803d 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      ></div>
+      
+      {/* Glowing Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#97fc43]/20 blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#15803d]/10 blur-[100px] pointer-events-none"></div>
+
+      {/* Main Container */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 lg:gap-20 relative z-10 items-center">
+        
+        {/* Left Side Branding (Hidden on very small screens) */}
+        <div className="hidden md:flex flex-col justify-center space-y-6">
+          <img src="/DeliveryLogo.png" alt="ShippNex Logo" className="h-20 w-auto object-contain self-start" />
+          <h1 className="text-4xl lg:text-6xl font-extrabold text-[#002625] tracking-tight leading-tight">
+            Driver <br />
+            <span className="text-[#15803d]">Command Center.</span>
+          </h1>
+          <p className="text-slate-600 text-lg max-w-md">
+            Your premium gateway to real-time logistics, route intelligence, and instant payouts.
+          </p>
+          
+          {/* Quick Stats */}
+          <div className="flex gap-8 pt-6">
+             <div className="space-y-1">
+                <p className="text-[#15803d] font-bold text-2xl">24/7</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Dispatch Support</p>
+             </div>
+             <div className="space-y-1">
+                <p className="text-[#15803d] font-bold text-2xl">Live</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Route Sync</p>
+             </div>
+          </div>
+        </div>
+
+        {/* Login Form Column */}
+        <div className="flex flex-col justify-center max-w-md mx-auto w-full md:max-w-none">
+          <div className="bg-white p-8 sm:p-10 rounded-[32px] w-full border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+            
+            {/* Mobile Logo (Visible only on mobile since left side is hidden) */}
+            <div className="md:hidden flex justify-center mb-8">
+               <img src="/DeliveryLogo.png" alt="ShippNex Logo" className="h-16 w-auto object-contain" />
+            </div>
+
+            <div className="mb-8 text-center md:text-left">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#002625] mb-2">
+                {step === 'phone' ? 'Welcome Back' : 'Verify Identity'}
+              </h2>
+              <p className="text-slate-500 text-sm">
+                {step === 'phone' 
+                  ? 'Enter your mobile number to access your dashboard.' 
+                  : `Enter the 4-digit code sent to +91 ${mobileNumber}`}
+              </p>
+            </div>
+
+            {/* Form Content */}
+            {step === 'phone' ? (
+              <form onSubmit={handlePhoneSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] text-[#15803d] uppercase font-black tracking-widest ml-1" htmlFor="mobile">
+                    Mobile Number
+                  </label>
+                  <div
+                    className={`relative flex items-center rounded-2xl transition-all duration-300 bg-slate-50 border ${
+                      hasError ? 'border-red-400 bg-red-50' : 'border-slate-200 focus-within:border-[#15803d] focus-within:bg-white'
+                    }`}
+                  >
+                    <div className="absolute left-4 flex items-center gap-2 pointer-events-none text-slate-400">
+                      <span className="material-symbols-outlined text-[20px]">call</span>
+                      <span className="font-bold border-r border-slate-200 pr-3">+91</span>
+                    </div>
+                    <input
+                      id="mobile"
+                      type="tel"
+                      maxLength={10}
+                      value={mobileNumber}
+                      onChange={handleInputChange}
+                      placeholder="98765 43210"
+                      className="w-full bg-transparent border-none rounded-2xl py-4 pl-[92px] pr-4 text-[#002625] font-bold focus:ring-0 placeholder:text-slate-300 outline-none"
+                    />
+                  </div>
+                  {hasError && (
+                    <p className="text-xs text-red-500 ml-1 font-medium">Please enter a valid 10-digit mobile number</p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  className={`w-full py-4 rounded-2xl shadow-lg transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2 font-black tracking-wide cursor-pointer ${
+                    statusState === 'success'
+                      ? 'bg-[#15803d] text-white'
+                      : mobileNumber.length < 10
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                      : 'bg-[#97fc43] hover:bg-[#86e835] text-[#002625] hover:shadow-[0_0_20px_rgba(151,252,67,0.3)]'
+                  }`}
+                >
+                  {statusState === 'processing' && (
+                    <>
+                      <span className="animate-spin material-symbols-outlined">sync</span> Processing...
+                    </>
+                  )}
+                  {statusState === 'success' && (
+                    <>
+                      OTP Sent! <span className="material-symbols-outlined">check_circle</span>
+                    </>
+                  )}
+                  {statusState === 'idle' && (
+                    <>
+                      Continue Securely
+                      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleOtpSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] text-[#15803d] uppercase font-black tracking-widest ml-1">
+                    Enter OTP
+                  </label>
+                  <div className="flex gap-3 sm:gap-4 justify-between">
+                    {[0, 1, 2, 3].map((index) => (
+                      <input
+                        key={index}
+                        id={`otp-${index}`}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={otp[index] || ''}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        className="flex-1 w-full h-14 sm:h-16 max-w-[4rem] bg-slate-50 border border-slate-200 focus:border-[#15803d] focus:bg-white rounded-xl sm:rounded-2xl text-center text-[#002625] font-bold text-2xl focus:ring-0 outline-none transition-all shadow-sm"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className={`w-full py-4 rounded-2xl shadow-lg transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2 font-black tracking-wide cursor-pointer ${
+                    otpStatus === 'success'
+                      ? 'bg-[#15803d] text-white'
+                      : otp.length < 4
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                      : 'bg-[#97fc43] hover:bg-[#86e835] text-[#002625] hover:shadow-[0_0_20px_rgba(151,252,67,0.3)]'
+                  }`}
+                >
+                  {otpStatus === 'processing' && (
+                    <>
+                      <span className="animate-spin material-symbols-outlined">sync</span> Verifying...
+                    </>
+                  )}
+                  {otpStatus === 'success' && (
+                    <>
+                      Verified! <span className="material-symbols-outlined">check_circle</span>
+                    </>
+                  )}
+                  {otpStatus === 'idle' && (
+                    <>
+                      Verify OTP
+                      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </>
+                  )}
+                </button>
+                
+                <div className="text-center pt-2">
+                  <button type="button" onClick={() => setStep('phone')} className="text-xs font-bold text-slate-500 hover:text-[#15803d] transition-colors cursor-pointer">
+                    Wrong number? Go back
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Footer Info */}
+            <div className="mt-8 text-center">
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                By continuing, you agree to our <br />
+                <a href="#terms" className="text-[#15803d] hover:underline font-bold">Terms of Service</a> &{' '}
+                <a href="#privacy" className="text-[#15803d] hover:underline font-bold">Privacy Policy</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+export default DriverLogin;
